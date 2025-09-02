@@ -185,15 +185,77 @@ router.post('/save', async (req, res) => {
       }
     })
 
+    let database
     if (databases.results.length === 0) {
-      return res.status(404).json({
-        error: 'No Notion databases found. Please create a database first.',
-        code: 'NO_DATABASES'
+      console.log('📝 No databases found, creating a new one...')
+      
+      // Get user's pages to find a suitable parent page
+      const pages = await notion.search({
+        filter: {
+          property: 'object',
+          value: 'page'
+        }
       })
-    }
 
-    // Use the first database (in production, let user select)
-    const database = databases.results[0]
+      if (pages.results.length === 0) {
+        return res.status(404).json({
+          error: 'No Notion pages found. Please create a page in your workspace first.',
+          code: 'NO_PAGES'
+        })
+      }
+
+      // Use the first page as parent
+      const parentPage = pages.results[0]
+
+      // Create a new database automatically
+      const newDatabase = await notion.databases.create({
+        parent: {
+          type: 'page_id',
+          page_id: parentPage.id
+        },
+        title: [
+          {
+            type: 'text',
+            text: {
+              content: 'YouTube Video Summaries'
+            }
+          }
+        ],
+        properties: {
+          'Title': {
+            title: {}
+          },
+          'Video URL': {
+            url: {}
+          },
+          'Date': {
+            date: {}
+          },
+          'Tags': {
+            multi_select: {
+              options: [
+                { name: 'Education', color: 'blue' },
+                { name: 'Technology', color: 'green' },
+                { name: 'Business', color: 'yellow' },
+                { name: 'Health', color: 'red' },
+                { name: 'Science', color: 'purple' },
+                { name: 'Entertainment', color: 'pink' },
+                { name: 'Tutorial', color: 'orange' },
+                { name: 'Review', color: 'brown' },
+                { name: 'Analysis', color: 'gray' }
+              ]
+            }
+          }
+        }
+      })
+
+      database = newDatabase
+      console.log(`✅ Created new database: ${newDatabase.id}`)
+    } else {
+      // Use the first existing database
+      database = databases.results[0]
+      console.log(`📊 Using existing database: ${database.id}`)
+    }
 
     // Create page in Notion database
     const pageResponse = await notion.pages.create({

@@ -136,6 +136,18 @@ export default function Home() {
           description: "This video is private or restricted and cannot be accessed.",
           variant: "destructive"
         })
+      } else if (error.response?.data?.code === 'NO_DATABASES') {
+        toast({
+          title: "Database Setup Failed",
+          description: "We couldn't create a database automatically. Please try again or check your Notion permissions.",
+          variant: "destructive"
+        })
+      } else if (error.response?.data?.code === 'NO_PAGES') {
+        toast({
+          title: "No Notion Pages Found",
+          description: "Please create at least one page in your Notion workspace first, then try again.",
+          variant: "destructive"
+        })
       } else {
         toast({
           title: "Error",

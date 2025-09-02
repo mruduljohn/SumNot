@@ -2,18 +2,13 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
-import { BookOpen, CheckCircle, AlertCircle, Settings, ExternalLink } from 'lucide-react'
+import { BookOpen, CheckCircle, AlertCircle, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { notionApi, formatErrorMessage } from '@/lib/api'
 import { Link } from 'react-router-dom'
 
 interface NotionConnection {
   isConnected: boolean
-  selectedPage?: {
-    id: string
-    title: string
-    url: string
-  }
 }
 
 export default function Dashboard() {
@@ -55,13 +50,11 @@ export default function Dashboard() {
 
     // Check if already connected
     const storedBotId = localStorage.getItem('notion-bot-id')
-    const selectedPage = localStorage.getItem('notion-selected-page')
     
     if (storedBotId) {
       setConnection(prev => ({ 
         ...prev, 
-        isConnected: true,
-        selectedPage: selectedPage ? JSON.parse(selectedPage) : undefined
+        isConnected: true
       }))
     }
   }, [])
@@ -91,7 +84,6 @@ export default function Dashboard() {
 
   const handleDisconnect = () => {
     localStorage.removeItem('notion-bot-id')
-    localStorage.removeItem('notion-selected-page')
     setConnection({ isConnected: false })
     toast({
       title: "Disconnected",
@@ -166,29 +158,31 @@ export default function Dashboard() {
                   </Button>
                 </div>
 
-                {connection.selectedPage ? (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-blue-900">Selected Page</p>
-                        <p className="text-sm text-blue-700">{connection.selectedPage.title}</p>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={connection.selectedPage.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Open
-                        </a>
-                      </Button>
+                {/* Ready to use */}
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-green-900">Ready to Use</p>
+                      <p className="text-sm text-green-700">
+                        Your Notion integration is connected and ready to save video summaries.
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center space-y-4">
-                    <p className="text-muted-foreground">No page selected yet</p>
-                    <Button variant="outline">
-                      Select Notion Page
-                    </Button>
+                </div>
+
+                {/* Auto-Setup Info */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-start space-x-2">
+                    <div className="text-blue-600 mt-0.5">ℹ️</div>
+                    <div>
+                      <p className="font-medium text-blue-900">Automatic Setup</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        We'll automatically create a "YouTube Video Summaries" database in your Notion workspace when you save your first summary.
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </CardContent>
