@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Youtube, BookOpen, Settings } from 'lucide-react'
+import { Youtube, BookOpen } from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
