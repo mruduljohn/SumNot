@@ -156,6 +156,18 @@ router.post('/save', async (req, res) => {
       })
     }
 
+    // Validate data types and format
+    if (typeof title !== 'string' || typeof summary !== 'string' || typeof videoUrl !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid data types for title, summary, or video URL',
+        code: 'INVALID_DATA_TYPES'
+      })
+    }
+
+    // Ensure tags is an array
+    const validTags = Array.isArray(tags) ? tags : []
+    console.log(`📊 Validated data:`, { title: title.length, summary: summary.length, videoUrl, tags: validTags.length })
+
     // Get access token from storage
     let tokenData
     if (botId) {
@@ -208,6 +220,7 @@ router.post('/save', async (req, res) => {
       const parentPage = pages.results[0]
 
       // Create a new database automatically
+      console.log(`📝 Creating database in parent page: ${parentPage.id}`)
       const newDatabase = await notion.databases.create({
         parent: {
           type: 'page_id',
@@ -258,6 +271,9 @@ router.post('/save', async (req, res) => {
     }
 
     // Create page in Notion database
+    console.log(`📄 Creating page in database: ${database.id}`)
+    console.log(`📄 Page data:`, { title, videoUrl, tags: tags.length })
+    
     const pageResponse = await notion.pages.create({
       parent: {
         database_id: database.id,
@@ -281,7 +297,7 @@ router.post('/save', async (req, res) => {
           },
         },
         'Tags': {
-          multi_select: tags.map(tag => ({
+          multi_select: validTags.map(tag => ({
             name: tag,
           })),
         },
@@ -360,6 +376,12 @@ router.post('/save', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error saving to Notion:', error)
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      response: error.response?.data
+    })
     
     if (error.code === 'unauthorized') {
       return res.status(401).json({
@@ -372,6 +394,14 @@ router.post('/save', async (req, res) => {
       return res.status(404).json({
         error: 'Notion database not found or access denied',
         code: 'DATABASE_NOT_FOUND'
+      })
+    }
+
+    if (error.code === 'validation_error') {
+      return res.status(400).json({
+        error: 'Invalid data format for Notion',
+        code: 'VALIDATION_ERROR',
+        details: error.message
       })
     }
 
