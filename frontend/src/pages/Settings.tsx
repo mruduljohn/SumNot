@@ -9,17 +9,19 @@ import { useToast } from '@/components/ui/use-toast'
 import { Key, Brain, Save, Eye, EyeOff } from 'lucide-react'
 
 import { motion } from 'framer-motion'
-import { AI_PROVIDERS } from '@/lib/constants'
+import { AI_PROVIDERS, OPENROUTER_MODELS } from '@/lib/constants'
 
 interface AppSettings {
   apiKey: string
   aiProvider: string
+  openrouterModel: string
 }
 
 export default function Settings() {
   const [settings, setSettings] = useState<AppSettings>({
     apiKey: '',
-    aiProvider: 'openai'
+    aiProvider: 'openai',
+    openrouterModel: 'openai/gpt-4o'
   })
   const [showApiKey, setShowApiKey] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,7 +63,8 @@ export default function Settings() {
     localStorage.removeItem('app-settings')
     setSettings({
       apiKey: '',
-      aiProvider: 'openai'
+      aiProvider: 'openai',
+      openrouterModel: 'openai/gpt-4o'
     })
     toast({
       title: "Settings Cleared",
@@ -120,6 +123,30 @@ export default function Settings() {
                 </SelectContent>
               </Select>
             </div>
+
+            {settings.aiProvider === 'openrouter' && (
+              <div className="space-y-2">
+                <Label htmlFor="openrouter-model">OpenRouter Model</Label>
+                <Select 
+                  value={settings.openrouterModel} 
+                  onValueChange={(value) => setSettings(prev => ({ ...prev, openrouterModel: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OPENROUTER_MODELS.map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div>
+                          <div className="font-medium">{model.label}</div>
+                          <div className="text-xs text-muted-foreground">{model.description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="api-key">API Key</Label>

@@ -20,6 +20,39 @@ export const AI_PROVIDERS = [
   }
 ] as const
 
+export const OPENROUTER_MODELS = [
+  {
+    value: 'openai/gpt-4o',
+    label: 'GPT-4o',
+    description: 'Latest OpenAI model with enhanced capabilities'
+  },
+  {
+    value: 'openai/gpt-4o-mini',
+    label: 'GPT-4o Mini',
+    description: 'Faster and cheaper GPT-4o variant'
+  },
+  {
+    value: 'anthropic/claude-3.5-sonnet',
+    label: 'Claude 3.5 Sonnet',
+    description: 'Anthropic\'s most capable model'
+  },
+  {
+    value: 'anthropic/claude-3-haiku',
+    label: 'Claude 3 Haiku',
+    description: 'Fast and efficient Claude model'
+  },
+  {
+    value: 'google/gemini-pro-1.5',
+    label: 'Gemini Pro 1.5',
+    description: 'Google\'s advanced multimodal model'
+  },
+  {
+    value: 'meta-llama/llama-3.1-70b-instruct',
+    label: 'Llama 3.1 70B',
+    description: 'Meta\'s open-source large model'
+  }
+] as const
+
 export const DEFAULT_TAGS = [
   'Education',
   'Technology',

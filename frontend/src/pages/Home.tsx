@@ -29,7 +29,11 @@ export default function Home() {
   // Load settings from localStorage
   const [settings] = useState(() => {
     const savedSettings = localStorage.getItem('app-settings')
-    return savedSettings ? JSON.parse(savedSettings) : { apiKey: '', aiProvider: 'openai' }
+    return savedSettings ? JSON.parse(savedSettings) : { 
+      apiKey: '', 
+      aiProvider: 'openai',
+      openrouterModel: 'openai/gpt-4o'
+    }
   })
 
   const handleSummarize = async () => {
@@ -80,7 +84,8 @@ export default function Home() {
         transcript,
         title,
         apiKey: settings.apiKey,
-        provider: settings.aiProvider
+        provider: settings.aiProvider,
+        model: settings.openrouterModel
       })
 
       // Step 3: Save to Notion
@@ -111,11 +116,33 @@ export default function Home() {
 
     } catch (error) {
       console.error('Error:', error)
-      toast({
-        title: "Error",
-        description: formatErrorMessage(error),
-        variant: "destructive"
-      })
+      
+      // Handle specific transcript errors
+      if (error.response?.data?.code === 'NO_TRANSCRIPT') {
+        toast({
+          title: "Transcript Not Available",
+          description: "This video doesn't have captions available. Try a different video with captions enabled.",
+          variant: "destructive"
+        })
+      } else if (error.response?.data?.code === 'VIDEO_NOT_FOUND') {
+        toast({
+          title: "Video Not Found",
+          description: "The video URL is invalid or the video is no longer available.",
+          variant: "destructive"
+        })
+      } else if (error.response?.data?.code === 'VIDEO_PRIVATE') {
+        toast({
+          title: "Video Not Accessible",
+          description: "This video is private or restricted and cannot be accessed.",
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: formatErrorMessage(error),
+          variant: "destructive"
+        })
+      }
     } finally {
       setIsLoading(false)
       setTimeout(() => {
@@ -178,6 +205,13 @@ export default function Home() {
                   </p>
                 </div>
               )}
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-700">
+                  <strong>Note:</strong> The video must have captions/transcripts available. 
+                  Try videos with auto-generated captions or manually added subtitles.
+                </p>
+              </div>
 
               <Button 
                 onClick={handleSummarize} 

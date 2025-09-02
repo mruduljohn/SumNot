@@ -18,7 +18,7 @@ const router = express.Router()
  */
 router.post('/', async (req, res) => {
   try {
-    const { transcript, title, apiKey, provider } = req.body
+    const { transcript, title, apiKey, provider, model } = req.body
 
     // Validate required fields
     if (!transcript || !apiKey || !provider) {
@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
         summaryResult = await summarizeWithAnthropic(transcript, title, apiKey)
         break
       case 'openrouter':
-        summaryResult = await summarizeWithOpenRouter(transcript, title, apiKey)
+        summaryResult = await summarizeWithOpenRouter(transcript, title, apiKey, model)
         break
       default:
         return res.status(400).json({
@@ -167,11 +167,11 @@ async function summarizeWithAnthropic(transcript, title, apiKey) {
  * @param {string} apiKey - OpenRouter API key
  * @returns {Object} - Summary result
  */
-async function summarizeWithOpenRouter(transcript, title, apiKey) {
+async function summarizeWithOpenRouter(transcript, title, apiKey, model = 'openai/gpt-4o-mini') {
   const prompt = createSummaryPrompt(transcript, title)
 
   const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-    model: 'openai/gpt-4o-mini',
+    model: model,
     messages: [
       {
         role: 'system',

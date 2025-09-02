@@ -71,6 +71,7 @@ export const summarizeApi = {
     title: string
     apiKey: string
     provider: string
+    model?: string
   }) => {
     const response = await api.post(API_ENDPOINTS.SUMMARIZE, data)
     return response.data

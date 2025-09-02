@@ -38,25 +38,66 @@ router.post('/', async (req, res) => {
     // Get video title first
     const title = await getVideoTitle(videoId)
     
-    // Try to get transcript using youtube-transcript package
+    // Try to get transcript using multiple methods
     let transcript
+    let transcriptSource = 'unknown'
+    
     try {
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId)
+      // Method 1: Try to get any available transcript (including auto-generated)
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {
+        lang: 'en', // Try English first
+        country: 'US'
+      })
       transcript = transcriptData
         .map(item => item.text)
         .join(' ')
         .trim()
+      transcriptSource = 'auto-generated'
       
       console.log(`✅ Transcript fetched successfully (${transcript.length} characters)`)
     } catch (transcriptError) {
       console.warn('⚠️ Primary transcript method failed:', transcriptError.message)
       
-      // Fallback: Try alternative methods or return error
-      return res.status(400).json({
-        error: 'Transcript not available for this video',
-        code: 'NO_TRANSCRIPT',
-        details: 'This video may not have captions or they may be disabled'
-      })
+      try {
+        // Method 2: Try without language specification (gets any available)
+        const transcriptData = await YoutubeTranscript.fetchTranscript(videoId)
+        transcript = transcriptData
+          .map(item => item.text)
+          .join(' ')
+          .trim()
+        transcriptSource = 'available'
+        
+        console.log(`✅ Transcript fetched with fallback method (${transcript.length} characters)`)
+      } catch (fallbackError) {
+        console.warn('⚠️ Fallback transcript method failed:', fallbackError.message)
+        
+        try {
+          // Method 3: Try with different language codes
+          const languages = ['en-US', 'en-GB', 'en', 'auto']
+          for (const lang of languages) {
+            try {
+              const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang })
+              transcript = transcriptData
+                .map(item => item.text)
+                .join(' ')
+                .trim()
+              transcriptSource = `language-${lang}`
+              console.log(`✅ Transcript fetched with language ${lang} (${transcript.length} characters)`)
+              break
+            } catch (langError) {
+              continue
+            }
+          }
+        } catch (finalError) {
+          console.error('❌ All transcript methods failed:', finalError.message)
+          
+          return res.status(400).json({
+            error: 'Transcript not available for this video',
+            code: 'NO_TRANSCRIPT',
+            details: 'This video may not have captions, auto-generated captions, or they may be disabled. Try a different video.'
+          })
+        }
+      }
     }
 
     // Validate transcript content
@@ -72,7 +113,8 @@ router.post('/', async (req, res) => {
       title: title || 'Untitled Video',
       transcript,
       videoId,
-      transcriptLength: transcript.length
+      transcriptLength: transcript.length,
+      transcriptSource
     })
 
   } catch (error) {
