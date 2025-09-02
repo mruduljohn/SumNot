@@ -127,24 +127,38 @@ export default function Settings() {
             {settings.aiProvider === 'openrouter' && (
               <div className="space-y-2">
                 <Label htmlFor="openrouter-model">OpenRouter Model</Label>
-                <Select 
-                  value={settings.openrouterModel} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, openrouterModel: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
+                <Input
+                  id="openrouter-model"
+                  placeholder="e.g., openai/gpt-4o, anthropic/claude-3.5-sonnet, meta-llama/llama-3.1-70b-instruct"
+                  value={settings.openrouterModel}
+                  onChange={(e) => setSettings(prev => ({ ...prev, openrouterModel: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the full model name. See all available models at{' '}
+                  <a 
+                    href="https://openrouter.ai/models" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    openrouter.ai/models
+                  </a>
+                </p>
+                <div className="text-xs text-muted-foreground">
+                  <p className="font-medium mb-1">Popular models:</p>
+                  <div className="grid grid-cols-1 gap-1">
                     {OPENROUTER_MODELS.map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        <div>
-                          <div className="font-medium">{model.label}</div>
-                          <div className="text-xs text-muted-foreground">{model.description}</div>
-                        </div>
-                      </SelectItem>
+                      <button
+                        key={model.value}
+                        type="button"
+                        onClick={() => setSettings(prev => ({ ...prev, openrouterModel: model.value }))}
+                        className="text-left text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {model.value} - {model.description}
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -263,6 +277,30 @@ export default function Settings() {
                     className="text-blue-600 hover:underline"
                   >
                     makersuite.google.com/app/apikey
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">OpenRouter</h4>
+                <p className="text-muted-foreground mb-2">
+                  Get your API key from{' '}
+                  <a 
+                    href="https://openrouter.ai/keys" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    openrouter.ai/keys
+                  </a>
+                  {' '}and browse models at{' '}
+                  <a 
+                    href="https://openrouter.ai/models" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    openrouter.ai/models
                   </a>
                 </p>
               </div>
