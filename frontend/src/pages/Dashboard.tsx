@@ -69,7 +69,11 @@ export default function Dashboard() {
   const handleConnectNotion = async () => {
     setIsLoading(true)
     try {
-      const { authUrl } = await notionApi.auth()
+      // For now, we'll use a placeholder - in production this would come from backend config
+      const { authUrl } = await notionApi.auth({
+        clientId: 'placeholder',
+        redirectUri: 'placeholder'
+      })
       
       // Redirect to Notion OAuth
       window.location.href = authUrl
