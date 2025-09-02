@@ -1,35 +1,29 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
-import { BookOpen, Copy, CheckCircle, AlertCircle } from 'lucide-react'
+import { BookOpen, CheckCircle, AlertCircle, Settings, ExternalLink } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { notionApi, formatErrorMessage } from '@/lib/api'
+import { Link } from 'react-router-dom'
 
-interface NotionConfig {
-  clientId: string
-  redirectUri: string
+interface NotionConnection {
   isConnected: boolean
+  selectedPage?: {
+    id: string
+    title: string
+    url: string
+  }
 }
 
 export default function Dashboard() {
-  const [config, setConfig] = useState<NotionConfig>({
-    clientId: '',
-    redirectUri: '',
+  const [connection, setConnection] = useState<NotionConnection>({
     isConnected: false
   })
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    // Load saved configuration
-    const savedConfig = localStorage.getItem('notion-config')
-    if (savedConfig) {
-      setConfig(JSON.parse(savedConfig))
-    }
-
     // Check for OAuth callback parameters
     const urlParams = new URLSearchParams(window.location.search)
     const connected = urlParams.get('connected')
@@ -39,7 +33,7 @@ export default function Dashboard() {
     if (connected === 'true' && botId) {
       // Store the bot ID for future use
       localStorage.setItem('notion-bot-id', botId)
-      setConfig(prev => ({ ...prev, isConnected: true }))
+      setConnection(prev => ({ ...prev, isConnected: true }))
       
       toast({
         title: "Success!",
@@ -61,47 +55,21 @@ export default function Dashboard() {
 
     // Check if already connected
     const storedBotId = localStorage.getItem('notion-bot-id')
+    const selectedPage = localStorage.getItem('notion-selected-page')
+    
     if (storedBotId) {
-      setConfig(prev => ({ ...prev, isConnected: true }))
+      setConnection(prev => ({ 
+        ...prev, 
+        isConnected: true,
+        selectedPage: selectedPage ? JSON.parse(selectedPage) : undefined
+      }))
     }
   }, [])
 
-  const handleSaveConfig = () => {
-    if (!config.clientId || !config.redirectUri) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both Client ID and Redirect URI",
-        variant: "destructive"
-      })
-      return
-    }
-
-    localStorage.setItem('notion-config', JSON.stringify(config))
-    toast({
-      title: "Configuration Saved",
-      description: "Notion configuration has been saved successfully",
-    })
-  }
-
   const handleConnectNotion = async () => {
-    if (!config.clientId || !config.redirectUri) {
-      toast({
-        title: "Configuration Required",
-        description: "Please configure Notion integration first",
-        variant: "destructive"
-      })
-      return
-    }
-
     setIsLoading(true)
     try {
-      const { authUrl } = await notionApi.auth({
-        clientId: config.clientId,
-        redirectUri: config.redirectUri
-      })
-      
-      // Store the client ID for later use
-      localStorage.setItem('notion-client-id', config.clientId)
+      const { authUrl } = await notionApi.auth()
       
       // Redirect to Notion OAuth
       window.location.href = authUrl
@@ -117,11 +85,13 @@ export default function Dashboard() {
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  const handleDisconnect = () => {
+    localStorage.removeItem('notion-bot-id')
+    localStorage.removeItem('notion-selected-page')
+    setConnection({ isConnected: false })
     toast({
-      title: "Copied to Clipboard",
-      description: "Text has been copied to your clipboard",
+      title: "Disconnected",
+      description: "Successfully disconnected from Notion",
     })
   }
 
@@ -137,154 +107,132 @@ export default function Dashboard() {
           Dashboard
         </h1>
         <p className="text-lg text-muted-foreground">
-          Manage your Notion integration and view your summaries
+          Connect to Notion and select where to save your video notes
         </p>
       </motion.div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Notion Configuration */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-blue-500" />
-                <span>Notion Integration</span>
-              </CardTitle>
-              <CardDescription>
-                Configure your Notion integration to save summaries automatically
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="client-id">Notion Client ID</Label>
-                <Input
-                  id="client-id"
-                  placeholder="Enter your Notion Client ID"
-                  value={config.clientId}
-                  onChange={(e) => setConfig(prev => ({ ...prev, clientId: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="redirect-uri">Redirect URI</Label>
-                <Input
-                  id="redirect-uri"
-                  placeholder="http://localhost:3000/auth/notion/callback"
-                  value={config.redirectUri}
-                  onChange={(e) => setConfig(prev => ({ ...prev, redirectUri: e.target.value }))}
-                />
-              </div>
-
-              <div className="flex space-x-2">
-                <Button onClick={handleSaveConfig} variant="outline">
-                  Save Configuration
-                </Button>
-                <Button 
-                  onClick={handleConnectNotion} 
-                  disabled={isLoading || !config.clientId || !config.redirectUri}
-                  className="flex-1"
-                >
-                  {isLoading ? 'Connecting...' : 'Connect to Notion'}
-                </Button>
-              </div>
-
-              {config.isConnected && (
-                <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-green-700">Connected to Notion</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Setup Instructions */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                <span>Setup Instructions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3 text-sm">
-                <div>
-                  <h4 className="font-semibold mb-2">1. Create Notion Integration</h4>
-                  <p className="text-muted-foreground mb-2">
-                    Go to{' '}
-                    <a 
-                      href="https://www.notion.so/my-integrations" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      notion.so/my-integrations
-                    </a>
-                    {' '}and create a new integration
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">2. Get Client ID</h4>
-                  <p className="text-muted-foreground mb-2">
-                    Copy the "Internal Integration Token" from your integration settings
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">3. Set Redirect URI</h4>
-                  <p className="text-muted-foreground mb-2">
-                    Use: <code className="bg-gray-100 px-1 rounded">http://localhost:3000/auth/notion/callback</code>
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard('http://localhost:3000/auth/notion/callback')}
-                  >
-                    <Copy className="mr-2 h-3 w-3" />
-                    Copy
-                  </Button>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">4. Share Database</h4>
-                  <p className="text-muted-foreground">
-                    Share your Notion database with the integration to allow saving summaries
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Recent Summaries */}
+      {/* Notion Connection Status */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.1 }}
       >
         <Card>
           <CardHeader>
-            <CardTitle>Recent Summaries</CardTitle>
+            <CardTitle className="flex items-center space-x-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              <span>Notion Connection</span>
+            </CardTitle>
             <CardDescription>
-              Your recently created video summaries
+              Connect your Notion account to save video summaries automatically
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!connection.isConnected ? (
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center space-x-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <AlertCircle className="h-5 w-5 text-amber-500" />
+                  <span className="text-amber-700">Not connected to Notion</span>
+                </div>
+                <Button 
+                  onClick={handleConnectNotion} 
+                  disabled={isLoading}
+                  size="lg"
+                  className="w-full"
+                >
+                  {isLoading ? 'Connecting...' : 'Connect to Notion'}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  You'll be redirected to Notion to authorize the connection
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="text-green-700 font-medium">Connected to Notion</span>
+                  </div>
+                  <Button 
+                    onClick={handleDisconnect} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+
+                {connection.selectedPage ? (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-blue-900">Selected Page</p>
+                        <p className="text-sm text-blue-700">{connection.selectedPage.title}</p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={connection.selectedPage.url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">No page selected yet</p>
+                    <Button variant="outline">
+                      Select Notion Page
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Quick Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid gap-4 md:grid-cols-2"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <BookOpen className="h-5 w-5 text-green-500" />
+              <span>Create Notes</span>
+            </CardTitle>
+            <CardDescription>
+              Generate notes from YouTube videos
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No summaries yet. Start by creating your first summary!</p>
-            </div>
+            <Button asChild className="w-full">
+              <Link to="/">
+                Go to Home
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Settings className="h-5 w-5 text-gray-500" />
+              <span>Settings</span>
+            </CardTitle>
+            <CardDescription>
+              Configure API keys and models
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/settings">
+                Open Settings
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </motion.div>

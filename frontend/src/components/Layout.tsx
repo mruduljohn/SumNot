@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Youtube, BookOpen } from 'lucide-react'
+import { Youtube, BookOpen, Settings } from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
@@ -31,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
                   className="flex items-center space-x-2"
                 >
                   <Youtube className="h-4 w-4" />
-                  <span>Summarize</span>
+                  <span>Create Notes</span>
                 </Button>
               </Link>
               <Link to="/dashboard">
@@ -41,6 +41,15 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   <BookOpen className="h-4 w-4" />
                   <span>Dashboard</span>
+                </Button>
+              </Link>
+              <Link to="/settings">
+                <Button 
+                  variant={location.pathname === '/settings' ? 'default' : 'ghost'}
+                  className="flex items-center space-x-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
                 </Button>
               </Link>
             </div>

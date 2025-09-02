@@ -1,12 +1,13 @@
-# 🚀 Deployment Guide - YouTube to Notion Summarizer
+# 🚀 Deployment Guide - SumNot
 
-This guide will help you deploy the YouTube to Notion Summarizer to production using Render for both frontend and backend.
+This guide will help you deploy SumNot (YouTube to Notion Summarizer) to production using Render for both frontend and backend.
 
 ## 📋 Prerequisites
 
 1. **Notion Integration**: Create a public integration at [Notion Integrations](https://www.notion.so/my-integrations)
 2. **Render Account**: Sign up at [Render](https://render.com)
 3. **GitHub Repository**: Ensure your code is pushed to GitHub
+4. **AI API Key**: Get an API key from OpenAI, Anthropic, or Google (for video summarization)
 
 ## 🔧 Notion Integration Setup
 
@@ -58,10 +59,16 @@ NOTION_REDIRECT_URI=https://your-backend-service.onrender.com/api/notion/callbac
 
 ### 3. Update Notion Integration
 
-Update your Notion integration's redirect URI to:
+**Important**: Update your Notion integration's redirect URI to match your deployed backend:
 ```
 https://your-backend-service.onrender.com/api/notion/callback
 ```
+
+**Steps**:
+1. Go to your Notion integration settings
+2. Update the "Redirect URI" field with your actual Render backend URL
+3. Save the changes
+4. Use this same URL in your frontend configuration
 
 ## 🌐 Frontend Deployment (Render)
 
@@ -134,8 +141,11 @@ VITE_API_URL=https://your-backend-service.onrender.com
 
 1. **Frontend**: Visit your deployed frontend URL (e.g., `https://your-frontend-app.onrender.com`)
 2. **Backend Health**: Check `https://your-backend-service.onrender.com/health`
-3. **Notion OAuth**: Test the OAuth flow in the Dashboard
-4. **Video Summarization**: Test with a YouTube video
+3. **User Flow Test**:
+   - Go to Dashboard → Connect to Notion
+   - Go to Settings → Configure AI API key
+   - Go to Home → Paste YouTube URL → Create Notes
+4. **Verify**: Check that notes are saved to your Notion page
 
 ## 🔒 Security Considerations
 

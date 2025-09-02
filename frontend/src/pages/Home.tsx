@@ -22,19 +22,32 @@ interface SummaryResult {
 
 export default function Home() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [apiKey, setApiKey] = useState('')
-  const [aiProvider, setAiProvider] = useState('openai')
   const [isLoading, setIsLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState('')
   const [result, setResult] = useState<SummaryResult | null>(null)
   const { toast } = useToast()
 
+  // Load settings from localStorage
+  const [settings, setSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('app-settings')
+    return savedSettings ? JSON.parse(savedSettings) : { apiKey: '', aiProvider: 'openai' }
+  })
+
   const handleSummarize = async () => {
-    if (!youtubeUrl || !apiKey) {
+    if (!youtubeUrl) {
       toast({
-        title: "Missing Information",
-        description: "Please provide both YouTube URL and API key",
+        title: "YouTube URL Required",
+        description: "Please provide a YouTube URL",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!settings.apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please configure your API key in Settings first",
         variant: "destructive"
       })
       return
@@ -68,8 +81,8 @@ export default function Home() {
       const summaryData = await summarizeApi.generate({
         transcript,
         title,
-        apiKey,
-        provider: aiProvider
+        apiKey: settings.apiKey,
+        provider: settings.aiProvider
       })
 
       // Step 3: Save to Notion
@@ -123,10 +136,10 @@ export default function Home() {
         className="text-center space-y-4"
       >
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          YouTube to Notion Summarizer
+          SumNot
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Transform YouTube videos into structured summaries and automatically save them to your Notion workspace
+          Transform YouTube videos into structured notes and automatically save them to your Notion workspace
         </p>
       </motion.div>
 
@@ -144,7 +157,7 @@ export default function Home() {
                 <span>Video Details</span>
               </CardTitle>
               <CardDescription>
-                Provide the YouTube URL and your AI API key to get started
+                Paste a YouTube URL to create structured notes automatically
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -159,52 +172,30 @@ export default function Home() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="ai-provider">AI Provider</Label>
-                <Select value={aiProvider} onValueChange={setAiProvider} disabled={isLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select AI provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AI_PROVIDERS.map((provider) => (
-                      <SelectItem key={provider.value} value={provider.value}>
-                        {provider.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="api-key">API Key</Label>
-                <Input
-                  id="api-key"
-                  type="password"
-                  placeholder="Enter your API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your API key is stored locally and never sent to our servers
-                </p>
-              </div>
+              {!settings.apiKey && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-700">
+                    <strong>API Key Required:</strong> Please configure your AI provider and API key in{' '}
+                    <a href="/settings" className="text-blue-600 hover:underline">Settings</a> first.
+                  </p>
+                </div>
+              )}
 
               <Button 
                 onClick={handleSummarize} 
-                disabled={isLoading || !youtubeUrl || !apiKey}
+                disabled={isLoading || !youtubeUrl || !settings.apiKey}
                 className="w-full"
                 size="lg"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    Creating Notes...
                   </>
                 ) : (
                   <>
                     <Brain className="mr-2 h-4 w-4" />
-                    Summarize & Save to Notion
+                    Create Notes
                   </>
                 )}
               </Button>
