@@ -58,13 +58,24 @@ router.post('/', async (req, res) => {
     }
 
     console.log(`✅ Summary generated successfully`)
+    console.log(`📊 Summary result structure:`, {
+      hasTitle: !!summaryResult.title,
+      hasSummary: !!summaryResult.summary,
+      summaryType: typeof summaryResult.summary,
+      summaryLength: summaryResult.summary ? summaryResult.summary.length : 0
+    })
+
+    // Ensure summary is a string
+    const summaryText = typeof summaryResult.summary === 'string' 
+      ? summaryResult.summary 
+      : JSON.stringify(summaryResult.summary)
 
     res.json({
       title: summaryResult.title || title,
-      summary: summaryResult.summary,
+      summary: summaryText,
       tags: summaryResult.tags || [],
       provider: provider,
-      wordCount: summaryResult.summary.split(' ').length
+      wordCount: summaryText.split(' ').length
     })
 
   } catch (error) {
@@ -238,13 +249,16 @@ Respond only with valid JSON, no additional text.`
  */
 function parseSummaryResponse(content) {
   try {
+    // Ensure content is a string
+    const contentStr = typeof content === 'string' ? content : String(content)
+    
     // Try to extract JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    const jsonMatch = contentStr.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
       return {
         title: parsed.title || 'Video Summary',
-        summary: parsed.summary || content,
+        summary: String(parsed.summary || contentStr),
         tags: Array.isArray(parsed.tags) ? parsed.tags : []
       }
     }
@@ -252,16 +266,17 @@ function parseSummaryResponse(content) {
     // Fallback: treat entire response as summary
     return {
       title: 'Video Summary',
-      summary: content,
+      summary: contentStr,
       tags: ['General']
     }
   } catch (error) {
     console.warn('Failed to parse AI response as JSON:', error.message)
+    console.warn('Raw content:', content)
     
     // Fallback: treat entire response as summary
     return {
       title: 'Video Summary',
-      summary: content,
+      summary: String(content),
       tags: ['General']
     }
   }
