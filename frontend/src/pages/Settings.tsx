@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
-import { Settings, Key, Brain, Save, Eye, EyeOff } from 'lucide-react'
+import { Settings as SettingsIcon, Key, Brain, Save, Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { AI_PROVIDERS } from '@/lib/constants'
 

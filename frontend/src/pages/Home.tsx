@@ -3,14 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/components/ui/use-toast'
 import { Youtube, Brain, Database, Loader2, CheckCircle, ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { transcriptApi, summarizeApi, notionApi, isValidYouTubeUrl, formatErrorMessage } from '@/lib/api'
-import { AI_PROVIDERS } from '@/lib/constants'
 
 interface SummaryResult {
   title: string
@@ -29,7 +27,7 @@ export default function Home() {
   const { toast } = useToast()
 
   // Load settings from localStorage
-  const [settings, setSettings] = useState(() => {
+  const [settings] = useState(() => {
     const savedSettings = localStorage.getItem('app-settings')
     return savedSettings ? JSON.parse(savedSettings) : { apiKey: '', aiProvider: 'openai' }
   })
