@@ -114,7 +114,7 @@ export default function Home() {
         description: "Video summarized and saved to Notion successfully",
       })
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error)
       
       // Handle specific transcript errors
