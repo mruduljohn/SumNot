@@ -15,6 +15,12 @@ const app = express()
 const PORT = process.env.PORT || 5000
 
 /**
+ * Trust proxy configuration for deployment platforms
+ * Required for proper IP detection behind reverse proxies (Render, Heroku, etc.)
+ */
+app.set('trust proxy', 1)
+
+/**
  * Security middleware configuration
  * Implements comprehensive security headers and rate limiting
  */
