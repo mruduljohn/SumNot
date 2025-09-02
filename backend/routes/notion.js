@@ -18,12 +18,14 @@ const tokenStorage = new Map()
  */
 router.post('/auth', async (req, res) => {
   try {
-    const { clientId, redirectUri } = req.body
+    // Use environment variables instead of request body for security
+    const clientId = process.env.NOTION_CLIENT_ID
+    const redirectUri = process.env.NOTION_REDIRECT_URI
 
     if (!clientId || !redirectUri) {
-      return res.status(400).json({
-        error: 'Client ID and redirect URI are required',
-        code: 'MISSING_CREDENTIALS'
+      return res.status(500).json({
+        error: 'Notion integration not configured. Please contact administrator.',
+        code: 'NOTION_NOT_CONFIGURED'
       })
     }
 
