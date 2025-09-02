@@ -20,7 +20,7 @@
     "morgan": "^1.10.0",
     "openai": "^4.20.1",
     "tailwindcss-animate": "^1.0.7",
-    "youtube-transcript": "^1.0.6"
+    "youtube-transcript-plus": "^1.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

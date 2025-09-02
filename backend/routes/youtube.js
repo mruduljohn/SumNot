@@ -1,5 +1,5 @@
 import express from 'express'
-import { YoutubeTranscript } from 'youtube-transcript'
+import { fetchTranscript } from 'youtube-transcript-plus'
 import axios from 'axios'
 
 const router = express.Router()
@@ -43,24 +43,23 @@ router.post('/', async (req, res) => {
     let transcriptSource = 'unknown'
     
     try {
-      // Method 1: Try to get any available transcript (including auto-generated)
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: 'en', // Try English first
-        country: 'US'
+      // Method 1: Try to get English transcript first
+      const transcriptData = await fetchTranscript(videoId, {
+        lang: 'en'
       })
       transcript = transcriptData
         .map(item => item.text)
         .join(' ')
         .trim()
-      transcriptSource = 'auto-generated'
+      transcriptSource = 'english'
       
       console.log(`✅ Transcript fetched successfully (${transcript.length} characters)`)
     } catch (transcriptError) {
-      console.warn('⚠️ Primary transcript method failed:', transcriptError.message)
+      console.warn('⚠️ English transcript method failed:', transcriptError.message)
       
       try {
         // Method 2: Try without language specification (gets any available)
-        const transcriptData = await YoutubeTranscript.fetchTranscript(videoId)
+        const transcriptData = await fetchTranscript(videoId)
         transcript = transcriptData
           .map(item => item.text)
           .join(' ')
@@ -73,10 +72,10 @@ router.post('/', async (req, res) => {
         
         try {
           // Method 3: Try with different language codes
-          const languages = ['en-US', 'en-GB', 'en', 'auto']
+          const languages = ['en-US', 'en-GB', 'auto']
           for (const lang of languages) {
             try {
-              const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang })
+              const transcriptData = await fetchTranscript(videoId, { lang })
               transcript = transcriptData
                 .map(item => item.text)
                 .join(' ')
